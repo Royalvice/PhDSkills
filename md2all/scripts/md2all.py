@@ -4,11 +4,12 @@ from __future__ import annotations
 import argparse
 import shutil
 import subprocess
+import sys
 import uuid
 from pathlib import Path
 
 from build_bibliography import build_bib
-from common import detect_platform, eprint, find_executable, read_text, run_command, write_text
+from common import default_quarto_env, detect_platform, eprint, find_executable, find_python_module, read_text, run_command, write_text
 from infer_template import infer
 from validate_outputs import validate
 
@@ -19,21 +20,39 @@ def default_output_path(source: Path, target: str) -> Path:
 
 def install_dependencies() -> int:
     platform_name = detect_platform()
+    python_install = [sys.executable, "-m", "pip", "install", "python-docx"]
     if platform_name == "windows":
-        commands = [["winget", "install", "--id", "Quarto.Quarto", "-e"], ["winget", "install", "--id", "Pandoc.Pandoc", "-e"]]
+        commands = [
+            ["winget", "install", "--id", "Quarto.Quarto", "-e"],
+            ["winget", "install", "--id", "Pandoc.Pandoc", "-e"],
+            python_install,
+        ]
     elif platform_name == "macos":
-        commands = [["brew", "install", "--cask", "quarto"], ["brew", "install", "pandoc"]]
+        commands = [["brew", "install", "--cask", "quarto"], ["brew", "install", "pandoc"], python_install]
     else:
         eprint("Automatic installation is only implemented for Windows and macOS.")
         return 1
+    failed = False
     for command in commands:
         print(" ".join(command))
-        subprocess.run(command, check=False)
-    return 0
+        result = subprocess.run(command, check=False)
+        if result.returncode != 0:
+            failed = True
+    return 1 if failed else 0
 
 
 def ensure_quarto() -> bool:
     return find_executable("quarto") is not None
+
+
+def ensure_docx_support(args: argparse.Namespace) -> bool:
+    if args.to != "docx" or args.reference_doc:
+        return True
+    if find_python_module("docx"):
+        return True
+    eprint("python-docx is required to generate reference.docx templates for DOCX output.")
+    eprint("Run `python scripts/md2all.py --doctor` to verify the environment or `python scripts/md2all.py --install` to install missing pieces.")
+    return False
 
 
 def maybe_build_bib(source_text: str, temp_dir: Path) -> Path | None:
@@ -51,7 +70,7 @@ def maybe_make_reference_docx(args: argparse.Namespace, temp_dir: Path) -> Path 
     if args.reference_doc:
         return Path(args.reference_doc)
     output = temp_dir / "reference.docx"
-    command = ["python", str(Path(__file__).with_name("patch_reference_docx.py")), "--template", args.template, "--output", str(output)]
+    command = [sys.executable, str(Path(__file__).with_name("patch_reference_docx.py")), "--template", args.template, "--output", str(output)]
     if args.font:
         command.extend(["--font", args.font])
     if args.font_size:
@@ -88,6 +107,8 @@ def render(args: argparse.Namespace) -> int:
         if args.allow_llm_fix:
             eprint("LLM fallback is allowed, but deterministic environment setup is still required before rendering.")
         return 1
+    if not ensure_docx_support(args):
+        return 1
     inferred = infer(source)
     args.template = args.template or inferred["template"]
     args.locale = args.locale or inferred["locale"]
@@ -103,8 +124,10 @@ def render(args: argparse.Namespace) -> int:
         write_text(qmd_path, source_text)
         bib_path = Path(args.bibliography).resolve() if args.bibliography else maybe_build_bib(source_text, temp_dir)
         reference_doc = maybe_make_reference_docx(args, temp_dir)
+        if args.to == "docx" and not reference_doc and not args.reference_doc:
+            return 1
         command = build_quarto_command(args, qmd_path, output_path, bib_path, reference_doc)
-        result = subprocess.run(command, cwd=temp_dir, text=True, capture_output=True)
+        result = subprocess.run(command, cwd=temp_dir, text=True, capture_output=True, env=default_quarto_env(), stdin=subprocess.DEVNULL)
         if result.returncode != 0:
             eprint(result.stderr.strip() or result.stdout.strip() or "Quarto render failed")
             eprint("Deterministic rendering failed. Suggest LLM fallback only if the user wants assisted repair.")
@@ -144,7 +167,7 @@ def main() -> int:
     parser.add_argument("--allow-llm-fix", action="store_true")
     args = parser.parse_args()
     if args.doctor:
-        return subprocess.run(["python", str(Path(__file__).with_name("doctor.py"))], check=False).returncode
+        return subprocess.run([sys.executable, str(Path(__file__).with_name("doctor.py"))], check=False).returncode
     if args.install:
         return install_dependencies()
     if not args.input:

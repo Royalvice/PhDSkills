@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import importlib.metadata
+import importlib.util
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -26,8 +29,35 @@ def find_executable(name: str) -> str | None:
     return shutil.which(name)
 
 
-def run_command(command: list[str], check: bool = False) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(command, capture_output=True, text=True, check=check)
+def find_python_module(name: str) -> bool:
+    return importlib.util.find_spec(name) is not None
+
+
+def get_python_module_version(name: str) -> str | None:
+    try:
+        return importlib.metadata.version(name)
+    except importlib.metadata.PackageNotFoundError:
+        return None
+
+
+def default_quarto_env() -> dict[str, str]:
+    env = os.environ.copy()
+    if detect_platform() == "windows" and not env.get("QUARTO_R") and not env.get("R_HOME"):
+        windows_dir = env.get("WINDIR", r"C:\Windows")
+        if Path(windows_dir).exists():
+            # Quarto probes R even for non-R documents; giving it a real directory avoids
+            # fragile Windows lookup paths that can fail in automated shells.
+            env["QUARTO_R"] = windows_dir
+    return env
+
+
+def run_command(
+    command: list[str],
+    check: bool = False,
+    cwd: Path | None = None,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(command, capture_output=True, text=True, check=check, cwd=cwd, env=env, stdin=subprocess.DEVNULL)
 
 
 def load_json(path: Path) -> Any:

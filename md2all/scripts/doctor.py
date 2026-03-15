@@ -5,7 +5,7 @@ import argparse
 import json
 from dataclasses import asdict, dataclass
 
-from common import detect_platform, find_executable, run_command
+from common import detect_platform, find_executable, find_python_module, get_python_module_version, run_command
 
 
 @dataclass
@@ -36,14 +36,22 @@ def check_tool(name: str, version_command: list[str] | None = None, notes: str |
     return ToolStatus(name=name, found=True, path=path, version=version, notes=notes)
 
 
+def check_python_module(import_name: str, package_name: str, notes: str | None = None) -> ToolStatus:
+    found = find_python_module(import_name)
+    version = get_python_module_version(package_name) if found else None
+    return ToolStatus(name=package_name, found=found, path=None, version=version, notes=notes)
+
+
 def collect_status() -> dict[str, object]:
     return {
         "platform": detect_platform(),
         "tools": [
             asdict(check_tool("quarto", ["quarto", "--version"])),
             asdict(check_tool("pandoc", ["pandoc", "--version"])),
+            asdict(check_python_module("docx", "python-docx", notes="Required to generate reference.docx templates for DOCX output")),
             asdict(check_tool("xelatex", ["xelatex", "--version"], notes="Preferred TeX engine for PDF output")),
             asdict(check_tool("tlmgr", ["tlmgr", "--version"], notes="TinyTeX or TeX Live manager")),
+            asdict(check_tool("rsvg-convert", ["rsvg-convert", "--version"], notes="Optional helper for rasterizing SVG images when needed")),
             asdict(check_tool("winget", ["winget", "--version"], notes="Windows installer")),
             asdict(check_tool("brew", ["brew", "--version"], notes="macOS installer"))
         ]
