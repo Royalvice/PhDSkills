@@ -1,0 +1,4 @@
+interface:
+  display_name: "MD2All"
+  short_description: "Convert Markdown to DOCX, PDF, and HTML outputs"
+  default_prompt: "Use $md2all to convert or validate a Markdown document for publishing."

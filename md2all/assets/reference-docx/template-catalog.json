@@ -1,0 +1,13 @@
+{
+  "templates": [
+    {"id": "degree-thesis", "family": "academic", "label": "Degree Thesis", "locales": ["zh", "en"], "profile": "profiles/degree-thesis.json"},
+    {"id": "proposal-midterm", "family": "academic", "label": "Proposal or Midterm", "locales": ["zh", "en"], "profile": "profiles/proposal-midterm.json"},
+    {"id": "academic-report", "family": "academic", "label": "Academic Report", "locales": ["zh", "en"], "profile": "profiles/academic-report.json"},
+    {"id": "business-report", "family": "business", "label": "Business Report", "locales": ["zh", "en"], "profile": "profiles/business-report.json"},
+    {"id": "business-brief", "family": "business", "label": "Business Brief", "locales": ["zh", "en"], "profile": "profiles/business-brief.json"},
+    {"id": "business-handout", "family": "business", "label": "Business Handout", "locales": ["zh", "en"], "profile": "profiles/business-handout.json"},
+    {"id": "general-document", "family": "daily", "label": "General Document", "locales": ["zh", "en"], "profile": "profiles/general-document.json"},
+    {"id": "notice-explanation", "family": "daily", "label": "Notice and Explanation", "locales": ["zh", "en"], "profile": "profiles/notice-explanation.json"},
+    {"id": "resume", "family": "daily", "label": "Resume", "locales": ["zh", "en"], "profile": "profiles/resume.json"}
+  ]
+}
