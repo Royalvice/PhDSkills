@@ -45,6 +45,20 @@ def ensure_quarto() -> bool:
     return find_executable("quarto") is not None
 
 
+def run_text_command(command: list[str], cwd: Path | None = None, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        cwd=cwd,
+        env=env,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+
+
 def ensure_docx_support(args: argparse.Namespace) -> bool:
     if args.to != "docx" or args.reference_doc:
         return True
@@ -82,6 +96,17 @@ def maybe_make_reference_docx(args: argparse.Namespace, temp_dir: Path) -> Path 
         eprint(result.stderr.strip() or result.stdout.strip() or "Failed to generate reference.docx")
         return None
     return output
+
+
+def postprocess_docx_output(path: Path) -> bool:
+    command = [sys.executable, str(Path(__file__).with_name("postprocess_docx.py")), str(path)]
+    result = run_command(command)
+    if result.returncode != 0:
+        stderr = (result.stderr or "").strip()
+        stdout = (result.stdout or "").strip()
+        eprint(stderr or stdout or "Failed to post-process DOCX output")
+        return False
+    return True
 
 
 def build_quarto_command(args: argparse.Namespace, qmd_path: Path, output_path: Path, bib_path: Path | None, reference_doc: Path | None) -> list[str]:
@@ -127,9 +152,11 @@ def render(args: argparse.Namespace) -> int:
         if args.to == "docx" and not reference_doc and not args.reference_doc:
             return 1
         command = build_quarto_command(args, qmd_path, output_path, bib_path, reference_doc)
-        result = subprocess.run(command, cwd=temp_dir, text=True, capture_output=True, env=default_quarto_env(), stdin=subprocess.DEVNULL)
+        result = run_text_command(command, cwd=temp_dir, env=default_quarto_env())
         if result.returncode != 0:
-            eprint(result.stderr.strip() or result.stdout.strip() or "Quarto render failed")
+            stderr = (result.stderr or "").strip()
+            stdout = (result.stdout or "").strip()
+            eprint(stderr or stdout or "Quarto render failed")
             eprint("Deterministic rendering failed. Suggest LLM fallback only if the user wants assisted repair.")
             return result.returncode
         produced = temp_dir / output_path.name
@@ -137,6 +164,8 @@ def render(args: argparse.Namespace) -> int:
             eprint(f"Expected output not produced: {produced}")
             return 1
         shutil.copy2(produced, output_path)
+        if args.to == "docx" and not postprocess_docx_output(output_path):
+            return 1
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
     validation = validate(output_path)

@@ -28,8 +28,11 @@ Interpret the workflow this way:
 3. Infer a template and locale unless the user overrides them.
 4. Build a minimal `.bib` only when the user did not provide bibliography data.
 5. Render with Quarto.
-6. Run structural validation.
-7. Suggest LLM fallback only after a scripted failure or when the user asks for cleanup.
+6. For DOCX output, post-process the rendered file to enforce built-in house styles for title, paragraph indentation, captions, and equation numbering.
+7. Run structural validation.
+8. Suggest LLM fallback only after a scripted failure or when the user asks for cleanup.
+
+On Windows Codex sessions, if `quarto render` fails inside the sandbox with handle or process-spawn errors, rerun the render step outside the sandbox. Treat that as an execution-environment requirement rather than a document-content failure.
 
 ## Workflow
 

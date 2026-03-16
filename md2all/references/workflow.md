@@ -20,8 +20,10 @@
    - Otherwise infer a minimal `.bib` from reference strings in the Markdown.
 5. Build or patch a temporary `reference.docx` for DOCX output.
 6. Run `quarto render` with a stable environment for the current platform.
-7. Run `scripts/validate_outputs.py`.
-8. Only save a report when the user explicitly requests one.
+   - In Windows Codex sessions, if sandboxed execution fails with `Invalid handle` or equivalent process-spawn errors, rerun `quarto render` outside the sandbox.
+7. For DOCX output, run `scripts/postprocess_docx.py` to normalize house styles and layout details that Quarto may override directly in the document XML.
+8. Run `scripts/validate_outputs.py`.
+9. Only save a report when the user explicitly requests one.
 
 ## Output policy
 
