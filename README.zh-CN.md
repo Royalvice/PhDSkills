@@ -38,6 +38,12 @@ PhDSkills/
 │  ├─ assets/
 │  ├─ references/
 │  └─ agents/
+├─ ai-research-landscape/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
 └─ <future-skill>/
    ├─ SKILL.md
    ├─ scripts/
@@ -53,6 +59,7 @@ PhDSkills/
 | 技能 | 状态 | 关注点 |
 | --- | --- | --- |
 | `md2all` | 已提供 | Markdown 与 Quarto 发布工作流 |
+| `ai-research-landscape` | 已提供 | 已验证的 AI 文献脉络综述与参考文献整理 |
 | `future-skill` | 预留 | 随着仓库扩展在此新增技能 |
 
 ## 设计原则

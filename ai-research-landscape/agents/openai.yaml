@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Research Landscape"
+  short_description: "Build AI literature landscapes and curated bibliographies"
+  default_prompt: "Use $ai-research-landscape to map a research area into a verified markdown survey and BibTeX bibliography."

@@ -38,6 +38,12 @@ PhDSkills/
 │  ├─ assets/
 │  ├─ references/
 │  └─ agents/
+├─ ai-research-landscape/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
 └─ <future-skill>/
    ├─ SKILL.md
    ├─ scripts/
@@ -53,6 +59,7 @@ This section is intentionally designed to grow.
 | Skill | Status | Focus |
 | --- | --- | --- |
 | `md2all` | Available | Markdown and Quarto publishing workflows |
+| `ai-research-landscape` | Available | Verified AI literature landscapes and curated bibliographies |
 | `future-skill` | Reserved | Add new skills here as the library expands |
 
 ## Design Principles
