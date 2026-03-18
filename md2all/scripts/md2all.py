@@ -98,8 +98,10 @@ def maybe_make_reference_docx(args: argparse.Namespace, temp_dir: Path) -> Path 
     return output
 
 
-def postprocess_docx_output(path: Path) -> bool:
+def postprocess_docx_output(path: Path, template: str | None) -> bool:
     command = [sys.executable, str(Path(__file__).with_name("postprocess_docx.py")), str(path)]
+    if template:
+        command.extend(["--template", template])
     result = run_command(command)
     if result.returncode != 0:
         stderr = (result.stderr or "").strip()
@@ -164,7 +166,7 @@ def render(args: argparse.Namespace) -> int:
             eprint(f"Expected output not produced: {produced}")
             return 1
         shutil.copy2(produced, output_path)
-        if args.to == "docx" and not postprocess_docx_output(output_path):
+        if args.to == "docx" and not postprocess_docx_output(output_path, args.template):
             return 1
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)

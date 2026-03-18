@@ -1,0 +1,4 @@
+interface:
+  display_name: "Report to Slides"
+  short_description: "Turn dense reports into talk-ready slide blueprints"
+  default_prompt: "Use $report-to-talk-slides to turn this detailed report into a concise, talk-ready slide blueprint."

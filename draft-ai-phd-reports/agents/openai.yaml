@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI PhD Report Writer"
+  short_description: "Draft polished AI PhD reports in Markdown"
+  default_prompt: "Use $draft-ai-phd-reports to write a polished AI PhD report in Markdown with accurate citations and a natural academic tone."

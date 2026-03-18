@@ -7,6 +7,7 @@ Academic:
 - `degree-thesis`
 - `proposal-midterm`
 - `academic-report`
+  - Chinese academic reports default to a doctoral-style layout with asymmetric margins, centered page header, GB/T-friendly body typography, and heading levels through `Heading 4`
 
 Business:
 

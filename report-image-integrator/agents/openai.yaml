@@ -1,0 +1,4 @@
+interface:
+  display_name: "Report Image Integrator"
+  short_description: "Insert and cross-reference report figures"
+  default_prompt: "Use $report-image-integrator to inspect report images, insert the right figures into a Markdown report, add captions and cross-references, and rename the image files consistently."

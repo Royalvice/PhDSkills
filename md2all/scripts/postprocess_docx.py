@@ -7,6 +7,8 @@ import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+from common import ASSETS_DIR, load_json
+
 W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 M_NS = "http://schemas.openxmlformats.org/officeDocument/2006/math"
 R_NS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -62,7 +64,10 @@ def set_font_size(r_pr: ET.Element, size_pt: float) -> None:
 
 
 def set_color(r_pr: ET.Element, value: str) -> None:
-    get_or_add(r_pr, "w:color").set(qn("w:val"), value)
+    color = get_or_add(r_pr, "w:color")
+    color.set(qn("w:val"), value)
+    for key in ("themeColor", "themeTint", "themeShade"):
+        color.attrib.pop(qn(f"w:{key}"), None)
 
 
 def remove_child(parent: ET.Element, tag: str) -> None:
@@ -114,6 +119,45 @@ def set_paragraph_alignment(ppr: ET.Element, value: str) -> None:
     get_or_add(ppr, "w:jc").set(qn("w:val"), value)
 
 
+def align_to_word(value: str | None) -> str:
+    mapping = {
+        "left": "left",
+        "center": "center",
+        "right": "right",
+        "justify": "both",
+        "both": "both",
+    }
+    return mapping.get((value or "justify").lower(), "both")
+
+
+def load_profile(template_id: str | None) -> dict:
+    if not template_id:
+        return {
+            "body": {
+                "font_zh": "SimSun",
+                "font_en": "Times New Roman",
+                "size_pt": 12,
+                "line_spacing": 1.5,
+                "space_before_pt": 0,
+                "space_after_pt": 0,
+                "first_line_twips": 420,
+                "first_line_chars": 200,
+                "align": "justify",
+            },
+            "headings": {
+                "heading1": {"font_zh": "SimSun", "font_en": "Times New Roman", "size_pt": 15, "bold": True, "space_before_pt": 12, "space_after_pt": 6, "line_spacing": 1.5, "align": "left"},
+                "heading2": {"font_zh": "SimSun", "font_en": "Times New Roman", "size_pt": 13, "bold": True, "space_before_pt": 12, "space_after_pt": 6, "line_spacing": 1.5, "align": "left"},
+                "heading3": {"font_zh": "SimSun", "font_en": "Times New Roman", "size_pt": 12, "bold": True, "space_before_pt": 12, "space_after_pt": 6, "line_spacing": 1.5, "align": "left"},
+            },
+            "captions": {"font_zh": "SimSun", "font_en": "Times New Roman", "size_pt": 12, "space_before_pt": 6, "space_after_pt": 6, "line_spacing": 1.5, "align": "center"},
+        }
+    catalog = load_json(ASSETS_DIR / "reference-docx" / "template-catalog.json")
+    for item in catalog["templates"]:
+        if item["id"] == template_id:
+            return load_json(ASSETS_DIR / "reference-docx" / item["profile"])
+    raise KeyError(f"Unknown template: {template_id}")
+
+
 def patch_style(styles_root: ET.Element, style_id: str, *, font_zh: str, font_en: str, size_pt: float | None = None,
                 bold: bool | None = None, italic: bool | None = None, color: str | None = None,
                 align: str | None = None, before_pt: float | None = None, after_pt: float | None = None,
@@ -151,26 +195,28 @@ def patch_style(styles_root: ET.Element, style_id: str, *, font_zh: str, font_en
             p_pr.remove(p_bdr)
 
 
-def patch_styles(styles_xml: bytes) -> bytes:
+def patch_styles(styles_xml: bytes, profile: dict) -> bytes:
     root = ET.fromstring(styles_xml)
-    body_font_zh = "SimSun"
-    body_font_en = "Times New Roman"
-    body_size = 12.0
-    line_spacing = 1.5
-    first_line_twips = 420
-    first_line_chars = 200
+    body = profile["body"]
+    body_font_zh = body["font_zh"]
+    body_font_en = body["font_en"]
+    body_size = float(body["size_pt"])
+    line_spacing = float(body["line_spacing"])
+    first_line_twips = int(body.get("first_line_twips", 420))
+    first_line_chars = int(body.get("first_line_chars", 200))
+    body_align = align_to_word(body.get("align", "justify"))
 
     patch_style(root, "Normal", font_zh=body_font_zh, font_en=body_font_en, size_pt=body_size,
-                align="both", before_pt=0, after_pt=0, line_spacing=line_spacing,
+                align=body_align, before_pt=float(body.get("space_before_pt", 0)), after_pt=float(body.get("space_after_pt", 0)), line_spacing=line_spacing,
                 first_line_twips=first_line_twips, first_line_chars=first_line_chars)
     patch_style(root, "BodyText", font_zh=body_font_zh, font_en=body_font_en, size_pt=body_size,
-                align="both", before_pt=0, after_pt=0, line_spacing=line_spacing,
+                align=body_align, before_pt=float(body.get("space_before_pt", 0)), after_pt=float(body.get("space_after_pt", 0)), line_spacing=line_spacing,
                 first_line_twips=first_line_twips, first_line_chars=first_line_chars)
     patch_style(root, "FirstParagraph", font_zh=body_font_zh, font_en=body_font_en, size_pt=body_size,
-                align="both", before_pt=0, after_pt=0, line_spacing=line_spacing,
+                align=body_align, before_pt=float(body.get("space_before_pt", 0)), after_pt=float(body.get("space_after_pt", 0)), line_spacing=line_spacing,
                 first_line_twips=first_line_twips, first_line_chars=first_line_chars)
     patch_style(root, "Compact", font_zh=body_font_zh, font_en=body_font_en, size_pt=body_size,
-                align="both", before_pt=0, after_pt=0, line_spacing=line_spacing,
+                align=body_align, before_pt=float(body.get("space_before_pt", 0)), after_pt=0, line_spacing=line_spacing,
                 first_line_twips=0, first_line_chars=0)
     patch_style(root, "Title", font_zh=body_font_zh, font_en=body_font_en, size_pt=26,
                 bold=False, italic=False, color="000000", align="left", before_pt=0, after_pt=12,
@@ -178,14 +224,21 @@ def patch_styles(styles_xml: bytes) -> bytes:
     patch_style(root, "Subtitle", font_zh=body_font_zh, font_en=body_font_en, size_pt=14,
                 bold=False, italic=False, color="000000", align="left", before_pt=0, after_pt=6,
                 line_spacing=1.15, first_line_twips=0, first_line_chars=0)
-    for style_id, size in (("Heading1", 15), ("Heading2", 13), ("Heading3", 12)):
-        patch_style(root, style_id, font_zh=body_font_zh, font_en=body_font_en, size_pt=size,
-                    bold=True, italic=False, color="000000", align="left", before_pt=12, after_pt=6,
-                    line_spacing=line_spacing, first_line_twips=0, first_line_chars=0)
+    for style_key, style_id in (("heading1", "Heading1"), ("heading2", "Heading2"), ("heading3", "Heading3"), ("heading4", "Heading4")):
+        config = profile.get("headings", {}).get(style_key)
+        if not config:
+            continue
+        patch_style(root, style_id, font_zh=config["font_zh"], font_en=config["font_en"], size_pt=float(config["size_pt"]),
+                    bold=bool(config["bold"]), italic=False, color="000000", align=align_to_word(config.get("align", "left")),
+                    before_pt=float(config["space_before_pt"]), after_pt=float(config["space_after_pt"]),
+                    line_spacing=float(config.get("line_spacing", line_spacing)), first_line_twips=0, first_line_chars=0)
+    captions = profile.get("captions", {})
     for style_id in ("Caption", "ImageCaption", "TableCaption"):
-        patch_style(root, style_id, font_zh=body_font_zh, font_en=body_font_en, size_pt=body_size,
-                    bold=False, italic=False, color="000000", align="center", before_pt=6, after_pt=6,
-                    line_spacing=line_spacing, first_line_twips=0, first_line_chars=0)
+        patch_style(root, style_id, font_zh=captions.get("font_zh", body_font_zh), font_en=captions.get("font_en", body_font_en),
+                    size_pt=float(captions.get("size_pt", body_size)), bold=False, italic=False, color="000000",
+                    align=align_to_word(captions.get("align", "center")),
+                    before_pt=float(captions.get("space_before_pt", 6)), after_pt=float(captions.get("space_after_pt", 6)),
+                    line_spacing=float(captions.get("line_spacing", line_spacing)), first_line_twips=0, first_line_chars=0)
 
     return ET.tostring(root, encoding="utf-8", xml_declaration=True)
 
@@ -293,25 +346,30 @@ def extract_equation_number(paragraph: ET.Element) -> str | None:
     return None
 
 
-def patch_document(document_xml: bytes) -> bytes:
+def patch_document(document_xml: bytes, profile: dict) -> bytes:
     root = ET.fromstring(document_xml)
     body = root.find(qn("w:body"))
     if body is None:
         return document_xml
+    body_config = profile["body"]
+    body_align = align_to_word(body_config.get("align", "justify"))
+    captions = profile.get("captions", {})
 
     for paragraph in body.findall(f".//{qn('w:p')}"):
         style_id = get_paragraph_style_id(paragraph)
         if style_id in {"Caption", "ImageCaption", "TableCaption"}:
             ppr = normalize_ppr(paragraph)
-            set_paragraph_alignment(ppr, "center")
+            set_paragraph_alignment(ppr, align_to_word(captions.get("align", "center")))
             set_paragraph_indent(ppr, 0, 0)
-            set_paragraph_spacing(ppr, 6, 6, 1.5)
+            set_paragraph_spacing(ppr, float(captions.get("space_before_pt", 6)), float(captions.get("space_after_pt", 6)),
+                                  float(captions.get("line_spacing", body_config["line_spacing"])))
         elif style_id in {"BodyText", "FirstParagraph"}:
             if paragraph.find(qn("m:oMathPara")) is None:
                 ppr = normalize_ppr(paragraph)
-                set_paragraph_indent(ppr, 420, 200)
-                set_paragraph_spacing(ppr, 0, 0, 1.5)
-                set_paragraph_alignment(ppr, "both")
+                set_paragraph_indent(ppr, int(body_config.get("first_line_twips", 420)), int(body_config.get("first_line_chars", 200)))
+                set_paragraph_spacing(ppr, float(body_config.get("space_before_pt", 0)), float(body_config.get("space_after_pt", 0)),
+                                      float(body_config["line_spacing"]))
+                set_paragraph_alignment(ppr, body_align)
 
     body_children = list(body)
     for index, child in enumerate(body_children):
@@ -330,13 +388,14 @@ def patch_document(document_xml: bytes) -> bytes:
     return ET.tostring(root, encoding="utf-8", xml_declaration=True)
 
 
-def postprocess_docx(path: Path) -> None:
+def postprocess_docx(path: Path, template: str | None) -> None:
+    profile = load_profile(template)
     with zipfile.ZipFile(path, "r") as source:
         members = {name: source.read(name) for name in source.namelist()}
     if "word/styles.xml" in members:
-        members["word/styles.xml"] = patch_styles(members["word/styles.xml"])
+        members["word/styles.xml"] = patch_styles(members["word/styles.xml"], profile)
     if "word/document.xml" in members:
-        members["word/document.xml"] = patch_document(members["word/document.xml"])
+        members["word/document.xml"] = patch_document(members["word/document.xml"], profile)
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as target:
         for name, data in members.items():
             target.writestr(name, data)
@@ -345,8 +404,9 @@ def postprocess_docx(path: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Post-process DOCX output to enforce md2all house styles.")
     parser.add_argument("docx", type=Path)
+    parser.add_argument("--template")
     args = parser.parse_args()
-    postprocess_docx(args.docx)
+    postprocess_docx(args.docx, args.template)
     print(args.docx)
     return 0
 
