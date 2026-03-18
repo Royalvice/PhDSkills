@@ -11,7 +11,9 @@ Write AI PhD reports that read like serious academic prose rather than generic a
 
 When the user provides an existing Markdown draft, first audit whether its structure, headings, terminology, and Markdown mechanics match the expected report genre and will survive downstream `md2all` conversion cleanly.
 
-Read [references/workflow.md](references/workflow.md) first. Load [references/report-types.md](references/report-types.md) when choosing a document structure. Load [references/style-guide.md](references/style-guide.md) before drafting. Load [references/citation-and-evidence.md](references/citation-and-evidence.md) whenever the user provides papers, claims, URLs, or bibliography files.
+This skill also maintains a reusable session memory whenever the work spans iterative revisions, preference discovery, or repeated user corrections. The memory should capture what the user kept changing, what kinds of outputs the user rejected, and what practices consistently improved the drafts.
+
+Read [references/workflow.md](references/workflow.md) first. Load [references/report-types.md](references/report-types.md) when choosing a document structure. Load [references/style-guide.md](references/style-guide.md) before drafting. Load [references/citation-and-evidence.md](references/citation-and-evidence.md) whenever the user provides papers, claims, URLs, or bibliography files. Load [references/session-memory-schema.md](references/session-memory-schema.md) whenever the task is likely to involve multiple rounds or should remain reusable in later sessions.
 
 ## Trigger And Scope
 
@@ -27,6 +29,8 @@ Use this skill when the user asks for any of the following in an AI PhD context:
 - verify research facts, paper claims, dates, benchmarks, or terminology before writing
 
 Do not use this skill for casual blog posts, speculative claims that cannot be sourced, or outputs whose final format is not Markdown unless the user explicitly asks for a later conversion step handled elsewhere.
+
+When the user is revising the same report over multiple turns, or repeatedly clarifying writing preferences, treat session-memory maintenance as part of the core task rather than an optional note-taking step.
 
 ## Non-Negotiable Rules
 
@@ -46,6 +50,11 @@ Do not use this skill for casual blog posts, speculative claims that cannot be s
 13. When the user provides an existing Markdown report, default to a short preflight diagnosis before rewriting so the report type, structure problems, terminology issues, and `md2all` mapping are explicit.
 14. When the user provides a report draft plus an uncited `.bib`, treat bibliography integration as a first-class rewriting task rather than a final cosmetic pass.
 15. In bibliography-integration tasks, try to use the supplied entries as fully as the evidence allows, but do not force a citation into a claim the paper does not support.
+16. Maintain a session memory when the work includes iterative revision, back-and-forth preference discovery, or repeated critique from the user.
+17. The memory must distinguish stable preferences from one-off requests. Do not fossilize temporary wording choices into global rules unless the user's behavior across the session supports that inference.
+18. Record both failure patterns and successful patterns: what the user rejected, why it failed, and what later replacement worked better.
+19. Never store fabricated facts, speculative advisor preferences, or unverifiable project claims in the memory.
+20. When a prior memory file exists for the same report family, load it before drafting and use it to avoid repeating previously rejected writing moves.
 
 ## Workflow
 
@@ -59,6 +68,7 @@ Identify:
 - required sections or formatting constraints
 - source materials supplied by the user
 - whether factual verification or citation integration is required
+- whether a prior session memory exists or a new one should be created for this report line
 
 If the user gives a weak prompt, infer the smallest safe scope and continue.
 
@@ -75,6 +85,12 @@ At the same time, infer the most likely downstream `md2all` template family:
 - opening report or midterm-heavy academic review: prefer `proposal-midterm`
 - general research progress summary or formal academic writeup: prefer `academic-report`
 - only fall back to non-academic templates when the genre is clearly administrative rather than research-facing
+
+At intake, also decide the memory mode:
+
+- `load-and-continue` when a prior memory file exists for the same project or report family
+- `start-new` when the task is likely to span iterative revisions but no memory exists yet
+- `minimal` when the task is clearly one-shot and no reuse value is expected
 
 ### 2. Build The Evidence Base
 
@@ -93,6 +109,14 @@ If the user provides a report draft plus a separate `.bib` that has not yet been
 - map each cluster to likely sections or paragraphs in the report
 - identify entries that need live abstract or metadata verification before use
 - decide whether any section, especially `国内外研究现状`, needs substantive expansion so the bibliography can be integrated naturally
+
+At the same time, start a working memory log for the session:
+
+- stable tone and structure preferences
+- explicit user dislikes
+- corrections repeated across turns
+- draft patterns that failed
+- draft patterns that worked better after revision
 
 ### 3. Audit The Source Markdown First
 
@@ -119,6 +143,7 @@ Recommended fields:
 - recommended `md2all` template
 - whether YAML front matter needs to be added or cleaned
 - whether the draft is suitable for direct polishing or needs structural rewrite first
+- whether session memory should be created or resumed
 
 ### 4. Choose The Document Architecture
 
@@ -127,6 +152,12 @@ Select a structure from [references/report-types.md](references/report-types.md)
 ### 5. Draft In Natural Academic Prose
 
 Apply [references/style-guide.md](references/style-guide.md). Prefer flowing paragraphs, explicit transitions, and claim-evidence-reasoning links. Use bullet lists sparingly and only when they improve readability or satisfy a required format. If the output is in Chinese, default to formal Chinese academic prose shaped by common mainland university report conventions unless the user specifies another regional style.
+
+Across revision turns, continuously compare new user feedback against the working memory:
+
+- if the user repeats the same criticism, upgrade it into a stable preference or a stable bad case
+- if a correction appears once only, keep it local unless later evidence shows it is a broader pattern
+- when a new version resolves an earlier complaint, record the successful replacement as a best practice tied to the relevant document type or section
 
 ### 6. Integrate Citations Carefully
 
@@ -162,6 +193,11 @@ Default output:
 - with integrated citations or reference placeholders that correspond to real sources
 - with no meta commentary about being an AI assistant unless the user explicitly asks for process notes
 
+When the task spans meaningful revision rounds, the default deliverable set should also include:
+
+- one session-memory Markdown file using [references/session-memory-schema.md](references/session-memory-schema.md)
+- enough detail to help the next session recover the user's stable writing preferences, repeated objections, and proven fixes
+
 For `report draft + uncited .bib` inputs, the default deliverable should be:
 
 - one fully revised Markdown document
@@ -173,6 +209,7 @@ When revising an existing Markdown draft, the default interaction may be:
 
 1. a concise preflight diagnosis
 2. the revised Markdown document
+3. an updated session-memory file when iterative revision is part of the task
 
 Keep the diagnosis short and operational rather than essay-like.
 
@@ -185,5 +222,6 @@ If the user asks for revision rather than a fresh draft, preserve the original f
 - [references/style-guide.md](references/style-guide.md)
 - [references/citation-and-evidence.md](references/citation-and-evidence.md)
 - [references/markdown-and-md2all-compat.md](references/markdown-and-md2all-compat.md)
+- [references/session-memory-schema.md](references/session-memory-schema.md)
 
 

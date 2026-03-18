@@ -10,8 +10,11 @@ Extract the minimum writing brief:
 - language
 - deadline or reporting period
 - required evidence and available materials
+- whether a session memory already exists for this report line
 
 If the user supplies only a fragment, infer a sensible academic frame and continue without blocking.
+
+At intake, decide whether the task is memory-worthy. Default to `yes` when the user is iterating on the same report, refining preferences, or likely to return for another revision round.
 
 If the user supplies Markdown, perform a lightweight format diagnosis before rewriting:
 
@@ -32,6 +35,12 @@ Use one of four modes:
 3. Evidence-grounded rewrite: the user provides draft text plus papers, URLs, or a `.bib`, and expects stronger factual support.
 4. Bibliography-integration rewrite: the user provides an existing report plus a `.bib` whose entries are not yet cross-referenced in the body, and expects a fully cited rewritten Markdown document.
 
+In parallel, choose one memory mode:
+
+1. Resume memory: a prior session-memory file exists and should be loaded first.
+2. Start memory: the task is likely to continue across multiple turns or sessions.
+3. Skip memory: the task is clearly one-shot and no reuse value is visible.
+
 ## Recover The Core Story
 
 Before drafting, identify the thread that should carry the document:
@@ -44,6 +53,13 @@ Before drafting, identify the thread that should carry the document:
 - what the next stage will deliver
 
 The thread should appear across the document, not only in the introduction.
+
+Also recover the behavioral story of the session:
+
+- what the user cares about most
+- what kinds of edits the user keeps requesting
+- what kinds of generated language the user rejects
+- what changes improved acceptance in later iterations
 
 ## Infer The Expected Standard Form
 
@@ -69,6 +85,8 @@ Before line-level rewriting, check:
 
 Repair the structure first when the current Markdown would otherwise force awkward DOCX output.
 
+If a prior memory exists, use it during the audit to catch known failure patterns early. Example: if the memory says the user rejects list-heavy prose in opening reports, treat that as an audit warning before drafting.
+
 ## Preflight Output Format
 
 For existing Markdown drafts, prefer a short preflight summary in this shape:
@@ -81,13 +99,14 @@ For existing Markdown drafts, prefer a short preflight summary in this shape:
 6. `推荐 md2all 模板` or `Recommended md2all Template`
 7. `Front Matter 建议` or `Front Matter Suggestion`
 8. `处理方式` or `Edit Mode`
+9. `记忆文件策略` or `Session Memory Mode`
 
 Keep each item brief. The purpose is to guide the rewrite, not to replace it.
 
 When the task is `report draft + uncited .bib`, add two extra checks in the preflight:
 
-9. `文献覆盖计划` or `Citation Coverage Plan`
-10. `国内外研究现状是否需要扩写` or `Related-Work Expansion Need`
+10. `文献覆盖计划` or `Citation Coverage Plan`
+11. `国内外研究现状是否需要扩写` or `Related-Work Expansion Need`
 
 ## Verify Before You Assert
 
@@ -128,6 +147,15 @@ For `existing report + uncited .bib`, insert a citation pass between steps 3 and
 
 This order reduces drift and makes it easier to keep the document coherent.
 
+Across the drafting and revision cycle, maintain a lightweight working memory:
+
+- stable user preferences
+- repeated edits requested by the user
+- bad cases that triggered dissatisfaction
+- best practices that resolved those issues
+
+Update the persistent memory file at the end of each meaningful revision round, not only at the very end of the entire project.
+
 ## Revision Pass
 
 Perform at least one explicit revision pass for:
@@ -142,3 +170,24 @@ Perform at least one explicit revision pass for:
 - first-mention expansion of important English technical terms when needed
 - conservative Markdown compatible with `md2all`
 - final citation-key coverage for supplied `.bib` files, especially when the original draft had no inline citations
+- whether the session memory now captures the stable lessons of this round
+
+## Memory Maintenance Rules
+
+When a session memory is active:
+
+- read it before drafting
+- keep updating it when the user adds corrections or rejects a draft
+- separate stable preferences from one-off local requests
+- record why a bad case failed, not only that it failed
+- record what replacement worked better and where it should be reused
+
+At minimum, persist:
+
+- tone preferences that were repeated or clearly emphasized
+- structure choices the user corrected more than once
+- terminology constraints that should carry forward
+- citation handling patterns the user accepted or rejected
+- best-practice lessons tied to specific report genres
+
+Use [session-memory-schema.md](session-memory-schema.md) for the final structure.
