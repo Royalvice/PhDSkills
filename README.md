@@ -32,13 +32,37 @@ PhDSkills/
 ├─ README.md
 ├─ README.zh-CN.md
 ├─ .gitignore
+├─ ai-research-landscape/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
+├─ draft-ai-phd-reports/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
+├─ frontend-slides/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
 ├─ md2all/
 │  ├─ SKILL.md
 │  ├─ scripts/
 │  ├─ assets/
 │  ├─ references/
 │  └─ agents/
-├─ ai-research-landscape/
+├─ report-image-integrator/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
+├─ report-to-talk-slides/
 │  ├─ SKILL.md
 │  ├─ scripts/
 │  ├─ assets/
@@ -58,8 +82,12 @@ This section is intentionally designed to grow.
 
 | Skill | Status | Focus |
 | --- | --- | --- |
-| `md2all` | Available | Markdown and Quarto publishing workflows |
 | `ai-research-landscape` | Available | Verified AI literature landscapes and curated bibliographies |
+| `draft-ai-phd-reports` | Available | AI PhD report drafting, rewriting, and citation-aware polishing |
+| `frontend-slides` | Available | HTML slide creation and PPT-to-web presentation workflows |
+| `md2all` | Available | Markdown and Quarto publishing workflows |
+| `report-image-integrator` | Available | Content-aware figure selection, insertion, renaming, and cross-referencing for Markdown reports |
+| `report-to-talk-slides` | Available | Slide blueprint generation from reports and technical writeups |
 | `future-skill` | Reserved | Add new skills here as the library expands |
 
 ## Design Principles

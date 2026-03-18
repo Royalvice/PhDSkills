@@ -32,13 +32,37 @@ PhDSkills/
 ├─ README.md
 ├─ README.zh-CN.md
 ├─ .gitignore
+├─ ai-research-landscape/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
+├─ draft-ai-phd-reports/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
+├─ frontend-slides/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
 ├─ md2all/
 │  ├─ SKILL.md
 │  ├─ scripts/
 │  ├─ assets/
 │  ├─ references/
 │  └─ agents/
-├─ ai-research-landscape/
+├─ report-image-integrator/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
+├─ report-to-talk-slides/
 │  ├─ SKILL.md
 │  ├─ scripts/
 │  ├─ assets/
@@ -58,8 +82,12 @@ PhDSkills/
 
 | 技能 | 状态 | 关注点 |
 | --- | --- | --- |
-| `md2all` | 已提供 | Markdown 与 Quarto 发布工作流 |
 | `ai-research-landscape` | 已提供 | 已验证的 AI 文献脉络综述与参考文献整理 |
+| `draft-ai-phd-reports` | 已提供 | AI 博士报告撰写、重写与引文感知润色 |
+| `frontend-slides` | 已提供 | HTML 幻灯片创建与 PPT 转网页演示工作流 |
+| `md2all` | 已提供 | Markdown 与 Quarto 发布工作流 |
+| `report-image-integrator` | 已提供 | 面向 Markdown 报告的图像内容筛选、插入、重命名与交叉引用 |
+| `report-to-talk-slides` | 已提供 | 从报告和技术文稿生成演讲幻灯片蓝图 |
 | `future-skill` | 预留 | 随着仓库扩展在此新增技能 |
 
 ## 设计原则
