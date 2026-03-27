@@ -62,6 +62,12 @@ PhDSkills/
 │  ├─ assets/
 │  ├─ references/
 │  └─ agents/
+├─ report-to-flowchart-prompt/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
 ├─ report-to-talk-slides/
 │  ├─ SKILL.md
 │  ├─ scripts/
@@ -87,6 +93,7 @@ This section is intentionally designed to grow.
 | `frontend-slides` | Available | HTML slide creation and PPT-to-web presentation workflows |
 | `md2all` | Available | Markdown and Quarto publishing workflows |
 | `report-image-integrator` | Available | Content-aware figure selection, insertion, renaming, and cross-referencing for Markdown reports |
+| `report-to-flowchart-prompt` | Available | Flowchart-oriented image prompt generation from reports, proposals, and research plans |
 | `report-to-talk-slides` | Available | Slide blueprint generation from reports and technical writeups |
 | `future-skill` | Reserved | Add new skills here as the library expands |
 

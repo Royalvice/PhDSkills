@@ -9,7 +9,7 @@ import uuid
 from pathlib import Path
 
 from build_bibliography import build_bib
-from common import default_quarto_env, detect_platform, eprint, find_executable, find_python_module, read_text, run_command, write_text
+from common import ASSETS_DIR, default_quarto_env, detect_platform, eprint, find_executable, find_python_module, load_csl_catalog, read_text, run_command, write_text
 from infer_template import infer
 from validate_outputs import validate
 
@@ -98,6 +98,23 @@ def maybe_make_reference_docx(args: argparse.Namespace, temp_dir: Path) -> Path 
     return output
 
 
+def resolve_csl(value: str | None) -> str | None:
+    if not value:
+        return None
+    candidate = Path(value)
+    if candidate.exists():
+        return str(candidate.resolve())
+    catalog = load_csl_catalog()
+    for style in catalog.get("styles", []):
+        if style.get("id") == value:
+            filename = style.get("filename")
+            if filename:
+                path = ASSETS_DIR / "csl" / filename
+                if path.exists():
+                    return str(path.resolve())
+    return value
+
+
 def postprocess_docx_output(path: Path, template: str | None) -> bool:
     command = [sys.executable, str(Path(__file__).with_name("postprocess_docx.py")), str(path)]
     if template:
@@ -114,9 +131,10 @@ def postprocess_docx_output(path: Path, template: str | None) -> bool:
 def build_quarto_command(args: argparse.Namespace, qmd_path: Path, output_path: Path, bib_path: Path | None, reference_doc: Path | None) -> list[str]:
     command = ["quarto", "render", str(qmd_path), "--to", args.to, "--output", output_path.name]
     if bib_path:
+        command.append("--citeproc")
         command.extend(["--metadata", f"bibliography={bib_path}"])
     if args.csl:
-        command.extend(["--metadata", f"csl={args.csl}"])
+        command.extend(["--metadata", f"csl={resolve_csl(args.csl)}"])
     if reference_doc:
         command.extend(["--metadata", f"reference-doc={reference_doc}"])
     if args.locale:
@@ -144,31 +162,34 @@ def render(args: argparse.Namespace) -> int:
     source_text = read_text(source)
     work_tmp = source.parent / ".md2all-tmp"
     work_tmp.mkdir(exist_ok=True)
-    temp_dir = work_tmp / f"run-{uuid.uuid4().hex}"
+    run_id = f"run-{uuid.uuid4().hex}"
+    temp_dir = work_tmp / run_id
     temp_dir.mkdir(parents=True, exist_ok=False)
+    source_tmp_prefix = f".md2all-{run_id}-{source.stem}"
+    qmd_path = source.parent / f"{source_tmp_prefix}.qmd"
     try:
-        qmd_path = temp_dir / (source.stem + ".qmd")
         write_text(qmd_path, source_text)
         bib_path = Path(args.bibliography).resolve() if args.bibliography else maybe_build_bib(source_text, temp_dir)
         reference_doc = maybe_make_reference_docx(args, temp_dir)
         if args.to == "docx" and not reference_doc and not args.reference_doc:
             return 1
         command = build_quarto_command(args, qmd_path, output_path, bib_path, reference_doc)
-        result = run_text_command(command, cwd=temp_dir, env=default_quarto_env())
+        result = run_text_command(command, cwd=source.parent, env=default_quarto_env())
         if result.returncode != 0:
             stderr = (result.stderr or "").strip()
             stdout = (result.stdout or "").strip()
             eprint(stderr or stdout or "Quarto render failed")
             eprint("Deterministic rendering failed. Suggest LLM fallback only if the user wants assisted repair.")
             return result.returncode
-        produced = temp_dir / output_path.name
+        produced = source.parent / output_path.name
         if not produced.exists():
             eprint(f"Expected output not produced: {produced}")
             return 1
-        shutil.copy2(produced, output_path)
         if args.to == "docx" and not postprocess_docx_output(output_path, args.template):
             return 1
     finally:
+        if qmd_path.exists():
+            qmd_path.unlink()
         shutil.rmtree(temp_dir, ignore_errors=True)
     validation = validate(output_path)
     if not validation["ok"]:

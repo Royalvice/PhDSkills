@@ -1,0 +1,4 @@
+interface:
+  display_name: "Report to Flowchart Prompt"
+  short_description: "Turn reports into detailed Nano Banana flowchart prompts."
+  default_prompt: "Use this skill to extract the internal logic of a report and produce a detailed prompt for a clean blue-white research overview flowchart image."

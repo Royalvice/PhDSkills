@@ -33,6 +33,8 @@ Interpret the workflow this way:
 8. Suggest LLM fallback only after a scripted failure or when the user asks for cleanup.
 
 On Windows Codex sessions, if `quarto render` fails inside the sandbox with handle or process-spawn errors, rerun the render step outside the sandbox. Treat that as an execution-environment requirement rather than a document-content failure.
+For Markdown files with relative image paths, keep the render input in the source file's directory. Do not place the temporary `qmd` inside a nested temp directory unless resource paths are rewritten accordingly.
+After each md2all bug fix or workflow repair, record the bad case and the best practice in the skill references before finishing the task.
 
 ## Workflow
 
@@ -55,6 +57,7 @@ Default to the script pipeline instead of freeform editing:
 - Use `scripts/build_bibliography.py` to infer a `.bib` when bibliography metadata is missing.
 - Use `scripts/patch_reference_docx.py` to generate or patch `reference.docx`.
 - Use `scripts/validate_outputs.py` after rendering.
+- For DOCX output with figures, verify both `word/media/*` entries and figure-caption/cross-reference resolution after rendering.
 
 Read [references/template-selection.md](references/template-selection.md) before overriding template heuristics. Read [references/bibliography-rules.md](references/bibliography-rules.md) before changing citation or bibliography behavior.
 
@@ -117,3 +120,4 @@ Read only what is needed:
 - [references/install-windows-macos.md](references/install-windows-macos.md): installation and verification policy
 - [references/markdown-repair-rules.md](references/markdown-repair-rules.md): when to stay conservative and when to escalate
 - [references/markdown2docx-borrow-and-avoid.md](references/markdown2docx-borrow-and-avoid.md): what to borrow and what not to copy from the inspected repository
+- [references/workflow.md](references/workflow.md): includes recorded bad cases and best practices that must be updated after fixes

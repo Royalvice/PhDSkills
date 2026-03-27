@@ -62,6 +62,12 @@ PhDSkills/
 │  ├─ assets/
 │  ├─ references/
 │  └─ agents/
+├─ report-to-flowchart-prompt/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
 ├─ report-to-talk-slides/
 │  ├─ SKILL.md
 │  ├─ scripts/
@@ -87,6 +93,7 @@ PhDSkills/
 | `frontend-slides` | 已提供 | HTML 幻灯片创建与 PPT 转网页演示工作流 |
 | `md2all` | 已提供 | Markdown 与 Quarto 发布工作流 |
 | `report-image-integrator` | 已提供 | 面向 Markdown 报告的图像内容筛选、插入、重命名与交叉引用 |
+| `report-to-flowchart-prompt` | 已提供 | 从报告、研究计划和提案生成研究总览流程图图像提示词 |
 | `report-to-talk-slides` | 已提供 | 从报告和技术文稿生成演讲幻灯片蓝图 |
 | `future-skill` | 预留 | 随着仓库扩展在此新增技能 |
 

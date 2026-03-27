@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import re
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -346,6 +347,118 @@ def extract_equation_number(paragraph: ET.Element) -> str | None:
     return None
 
 
+def is_run_like(node: ET.Element) -> bool:
+    return node.tag in {
+        qn("w:r"),
+        qn("w:hyperlink"),
+        qn("w:smartTag"),
+        qn("w:sdt"),
+        qn("w:bookmarkStart"),
+        qn("w:bookmarkEnd"),
+        qn("w:proofErr"),
+        qn("w:permStart"),
+        qn("w:permEnd"),
+    }
+
+
+def paragraph_text(paragraph: ET.Element) -> str:
+    return "".join(text.text or "" for text in paragraph.findall(f".//{qn('w:t')}"))
+
+
+def clear_paragraph_content(paragraph: ET.Element) -> None:
+    for child in list(paragraph):
+        if child.tag != qn("w:pPr"):
+            paragraph.remove(child)
+
+
+def append_text_run(paragraph: ET.Element, text: str, font_zh: str, font_en: str, size_pt: float) -> None:
+    run = ET.SubElement(paragraph, qn("w:r"))
+    rpr = ET.SubElement(run, qn("w:rPr"))
+    set_fonts(rpr, font_zh, font_en)
+    set_font_size(rpr, size_pt)
+    text_node = ET.SubElement(run, qn("w:t"))
+    if text.startswith(" ") or text.endswith(" ") or "  " in text:
+        text_node.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+    text_node.text = text
+
+
+def rewrite_paragraph_text(paragraph: ET.Element, text: str, font_zh: str, font_en: str, size_pt: float) -> None:
+    clear_paragraph_content(paragraph)
+    append_text_run(paragraph, text, font_zh, font_en, size_pt)
+
+
+def figure_label_from_body_child(child: ET.Element) -> str | None:
+    if child.tag != qn("w:bookmarkStart"):
+        return None
+    name = child.get(qn("w:name"))
+    if name and name.startswith("fig:"):
+        return name
+    return None
+
+
+def normalize_figure_reference_text(text: str, figure_numbers: dict[str, int]) -> str:
+    updated = text
+    for label, number in figure_numbers.items():
+        updated = re.sub(rf"图\s*@{re.escape(label)}\b", f"图{number}", updated)
+        updated = re.sub(rf"图\s*\[{re.escape(label)}\?\]", f"图{number}", updated)
+        updated = re.sub(rf"图\s*\[{re.escape(label)}\]", f"图{number}", updated)
+        updated = re.sub(rf"@{re.escape(label)}\b", f"图{number}", updated)
+        updated = re.sub(rf"\[{re.escape(label)}\?\]", f"{number}", updated)
+        updated = re.sub(rf"\[{re.escape(label)}\]", f"{number}", updated)
+    return updated
+
+
+def patch_figure_captions_and_refs(root: ET.Element, profile: dict) -> None:
+    body = root.find(qn("w:body"))
+    if body is None:
+        return
+    body_config = profile["body"]
+    captions = profile.get("captions", {})
+    font_zh = body_config["font_zh"]
+    font_en = body_config["font_en"]
+    font_size = float(body_config["size_pt"])
+
+    figure_numbers: dict[str, int] = {}
+    next_figure_number = 1
+    body_children = list(body)
+    for index, child in enumerate(body_children):
+        label = figure_label_from_body_child(child)
+        if not label:
+            continue
+        figure_numbers[label] = next_figure_number
+        next_figure_number += 1
+        for follower in body_children[index + 1:]:
+            if follower.tag != qn("w:p"):
+                continue
+            style_id = get_paragraph_style_id(follower)
+            if style_id == "CaptionedFigure":
+                continue
+            if style_id in {"Caption", "ImageCaption", "TableCaption"}:
+                caption_text = paragraph_text(follower).strip()
+                if caption_text and not re.match(r"^图\d+\s*", caption_text):
+                    rewrite_paragraph_text(
+                        follower,
+                        f"图{figure_numbers[label]} {caption_text}",
+                        captions.get("font_zh", font_zh),
+                        captions.get("font_en", font_en),
+                        float(captions.get("size_pt", font_size)),
+                    )
+                break
+            break
+
+    if not figure_numbers:
+        return
+    for paragraph in body.findall(f".//{qn('w:p')}"):
+        if paragraph.find(f".//{qn('w:drawing')}") is not None:
+            continue
+        original = paragraph_text(paragraph)
+        if "fig:" not in original:
+            continue
+        updated = normalize_figure_reference_text(original, figure_numbers)
+        if updated != original:
+            rewrite_paragraph_text(paragraph, updated, font_zh, font_en, font_size)
+
+
 def patch_document(document_xml: bytes, profile: dict) -> bytes:
     root = ET.fromstring(document_xml)
     body = root.find(qn("w:body"))
@@ -384,6 +497,8 @@ def patch_document(document_xml: bytes, profile: dict) -> bytes:
         table = create_equation_table(child, eq_number)
         body.remove(child)
         body.insert(index, table)
+
+    patch_figure_captions_and_refs(root, profile)
 
     return ET.tostring(root, encoding="utf-8", xml_declaration=True)
 

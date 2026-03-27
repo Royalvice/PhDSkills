@@ -22,6 +22,10 @@ def validate_docx(path: Path) -> list[str]:
             for required in ("[Content_Types].xml", "_rels/.rels", "word/document.xml"):
                 if required not in names:
                     issues.append(f"Missing DOCX member: {required}")
+            if "word/document.xml" in names:
+                document_xml = archive.read("word/document.xml").decode("utf-8", errors="replace")
+                if "[@" in document_xml:
+                    issues.append("DOCX still contains unresolved Pandoc citation syntax")
     except zipfile.BadZipFile:
         issues.append("DOCX output is not a valid ZIP archive")
     return issues
