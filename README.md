@@ -56,6 +56,12 @@ PhDSkills/
 │  ├─ assets/
 │  ├─ references/
 │  └─ agents/
+├─ agent-project-system/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
 ├─ report-image-integrator/
 │  ├─ SKILL.md
 │  ├─ scripts/
@@ -89,6 +95,7 @@ This section is intentionally designed to grow.
 | Skill | Status | Focus |
 | --- | --- | --- |
 | `ai-research-landscape` | Available | Verified AI literature landscapes and curated bibliographies |
+| `agent-project-system` | Available | AI-first project state documents, recovery contracts, and evidence-grounded autonomous progress |
 | `draft-ai-phd-reports` | Available | AI PhD report drafting, rewriting, and citation-aware polishing |
 | `frontend-slides` | Available | HTML slide creation and PPT-to-web presentation workflows |
 | `md2all` | Available | Markdown and Quarto publishing workflows |

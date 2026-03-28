@@ -56,6 +56,12 @@ PhDSkills/
 │  ├─ assets/
 │  ├─ references/
 │  └─ agents/
+├─ agent-project-system/
+│  ├─ SKILL.md
+│  ├─ scripts/
+│  ├─ assets/
+│  ├─ references/
+│  └─ agents/
 ├─ report-image-integrator/
 │  ├─ SKILL.md
 │  ├─ scripts/
@@ -89,6 +95,7 @@ PhDSkills/
 | 技能 | 状态 | 关注点 |
 | --- | --- | --- |
 | `ai-research-landscape` | 已提供 | 已验证的 AI 文献脉络综述与参考文献整理 |
+| `agent-project-system` | 已提供 | 面向 AI 自主推进的项目状态文档、恢复契约与证据化治理 |
 | `draft-ai-phd-reports` | 已提供 | AI 博士报告撰写、重写与引文感知润色 |
 | `frontend-slides` | 已提供 | HTML 幻灯片创建与 PPT 转网页演示工作流 |
 | `md2all` | 已提供 | Markdown 与 Quarto 发布工作流 |

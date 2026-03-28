@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Project System"
+  short_description: "AI-first project state docs and recovery."
+  default_prompt: "Use this skill to interrogate goals and constraints, scaffold an AI-first project state document system, and keep the project recoverable and evidence-grounded over time."
